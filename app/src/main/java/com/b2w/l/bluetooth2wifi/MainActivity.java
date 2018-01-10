@@ -11,8 +11,10 @@ import android.widget.Button;
 import android.widget.TextView;
 
 import com.clj.fastble.BleManager;
+import com.clj.fastble.callback.BleRssiCallback;
 import com.clj.fastble.callback.BleScanCallback;
 import com.clj.fastble.data.BleDevice;
+import com.clj.fastble.exception.BleException;
 import com.clj.fastble.scan.BleScanRuleConfig;
 
 import java.io.BufferedReader;
@@ -21,6 +23,7 @@ import java.io.OutputStreamWriter;
 import java.io.PrintWriter;
 import java.net.Socket;
 import java.util.List;
+import java.util.UUID;
 
 public class MainActivity extends AppCompatActivity {
 
@@ -39,7 +42,7 @@ public class MainActivity extends AppCompatActivity {
     BufferedReader reader;
     PrintWriter writer;
     boolean listening;
-    Thread listenThread;
+    String tmp_s;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -67,16 +70,21 @@ public class MainActivity extends AppCompatActivity {
 
                     @Override
                     public void onScanning(BleDevice bleDevice) {
-                        Log.d("b2w", "scaned device: " + bleDevice.getName());
+                        Log.d("b2wdebug", "scaned device: " + bleDevice.getName() + " " + bleDevice.getRssi());
                     }
 
                     @Override
                     public void onScanFinished(List<BleDevice> scanResultList) {
                         String s = "";
-                        for (BleDevice bleDevice : scanResultList) {
-                            s += bleDevice.getName() + ",";
+                        try {
+                            for (final BleDevice bleDevice : scanResultList) {
+                                Log.d("b2wdebug", "rssi:" + bleDevice.getName() + " " + bleDevice.getRssi());
+                                s += bleDevice.getName() + " " + bleDevice.getRssi() + "\n";
+                            }
+                            text_0.setText(s);
+                        } catch (Exception e) {
+                            Log.d("b2wdebug", e.toString());
                         }
-                        text_0.setText(s);
                     }
                 });
             }
@@ -105,15 +113,7 @@ public class MainActivity extends AppCompatActivity {
             @Override
             public void onClick(View view) {
                 try {
-                    new Thread(new Runnable() {
-                        @Override
-                        public void run() {
-                            if (socket != null) {
-                                writer.write("hello");
-                                writer.flush();
-                            }
-                        }
-                    }).start();
+                    send("hello");
                 } catch (Exception e) {
                     Log.d("b2wdebug", "button send error: " + e.toString());
                 }
@@ -125,12 +125,13 @@ public class MainActivity extends AppCompatActivity {
         manager = BleManager.getInstance();
         Log.d("b2wdebug", "is support ble? " + manager.isSupportBle());
         manager.enableBluetooth();
+        UUID[] uuid = new UUID[] {UUID.fromString("00001819-0000-1000-8000-00805F9B34FB")};
         scanRuleConfig = new BleScanRuleConfig.Builder()
-                /*.setServiceUuids(serviceUuids)      // 只扫描指定的服务的设备，可选
-                .setDeviceName(true, names)         // 只扫描指定广播名的设备，可选
+                .setServiceUuids(uuid)      // 只扫描指定的服务的设备，可选
+                /*.setDeviceName(true, names)         // 只扫描指定广播名的设备，可选
                 .setDeviceMac(mac)                  // 只扫描指定mac的设备，可选
-                .setAutoConnect(isAutoConnect)      // 连接时的autoConnect参数，可选，默认false
-                .setScanTimeOut(10000)              // 扫描超时时间，可选，默认10秒；小于等于0表示不限制扫描时间*/
+                .setAutoConnect(isAutoConnect)      // 连接时的autoConnect参数，可选，默认false*/
+                .setScanTimeOut(1000)              // 扫描超时时间，可选，默认10秒；小于等于0表示不限制扫描时间
                 .build();
     }
 
@@ -146,8 +147,28 @@ public class MainActivity extends AppCompatActivity {
         }
     }
 
-    void receive(String s) {
+    void send(String s) {
+        tmp_s = s;
+        new Thread(new Runnable() {
+            @Override
+            public void run() {
+                if (socket != null) {
+                    writer.write(tmp_s);
+                    writer.flush();
+                }
+            }
+        }).start();
+    }
+
+    void recv(String s) {
         Log.d("b2wdebug", "receive: " + s);
+        tmp_s = s;
+        activity_uithread.runOnUiThread(new Runnable() {
+            @Override
+            public void run() {
+                text_0.setText(tmp_s);
+            }
+        });
     }
 
     class NetworkAsyncTask extends AsyncTask<String, Integer, String> {
@@ -169,7 +190,7 @@ public class MainActivity extends AppCompatActivity {
                             try {
                                 String s = reader.readLine();
                                 if (s == null) listening = false;
-                                receive(s);
+                                recv(s);
                             } catch (Exception e) {
                                 Log.d("b2wdebug", "listen thread error: " + e.toString());
                                 listening = false;

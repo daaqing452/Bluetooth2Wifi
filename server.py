@@ -7,7 +7,9 @@ PORT = 11121
 ip = socket.gethostbyname(socket.gethostname())
 print('[     ip     ]:', ip)
 
-'''class MyServer(socketserver.BaseRequestHandler):
+'''
+# socketserver
+class MyServer(socketserver.BaseRequestHandler):
     def handle(self):
         client = self.request
         print('new connection: ', self.client_address)
@@ -18,10 +20,10 @@ print('[     ip     ]:', ip)
             print(buf)
             buf = str(buf_bytes, encoding='utf-8')
             if buf == 'q':
-                break'''
-
-'''server = socketserver.ThreadingTCPServer((ip, PORT), MyServer)
-server.serve_forever()'''
+                break
+server = socketserver.ThreadingTCPServer((ip, PORT), MyServer)
+server.serve_forever()
+'''
 
 server = socket.socket()
 server.bind((ip, PORT))
