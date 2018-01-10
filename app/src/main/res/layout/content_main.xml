@@ -1,0 +1,69 @@
+<?xml version="1.0" encoding="utf-8"?>
+<android.support.constraint.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    app:layout_behavior="@string/appbar_scrolling_view_behavior"
+    tools:context="com.b2w.l.bluetooth2wifi.MainActivity"
+    tools:showIn="@layout/activity_main">
+
+    <TextView
+        android:id="@+id/text_0"
+        android:layout_width="354dp"
+        android:layout_height="103dp"
+        android:layout_marginTop="16dp"
+        android:text="Hello World!"
+        app:layout_constraintStart_toStartOf="@+id/text_connect_info"
+        app:layout_constraintTop_toBottomOf="@+id/text_connect_info" />
+
+    <Button
+        android:id="@+id/button_scan"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="16dp"
+        android:layout_marginTop="16dp"
+        android:text="Scan"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent" />
+
+    <Button
+        android:id="@+id/button_connect"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="16dp"
+        android:text="Connect"
+        app:layout_constraintStart_toEndOf="@+id/button_scan"
+        app:layout_constraintTop_toTopOf="@+id/button_scan" />
+
+    <EditText
+        android:id="@+id/text_ip"
+        android:layout_width="146dp"
+        android:layout_height="45dp"
+        android:layout_marginStart="12dp"
+        android:layout_marginTop="16dp"
+        android:text="192.168.1.240"
+        android:textColor="@android:color/black"
+        app:layout_constraintStart_toEndOf="@+id/button_connect"
+        app:layout_constraintTop_toTopOf="parent" />
+
+    <TextView
+        android:id="@+id/text_connect_info"
+        android:layout_width="355dp"
+        android:layout_height="92dp"
+        android:layout_marginTop="8dp"
+        android:text="disconnected"
+        app:layout_constraintStart_toStartOf="@+id/button_scan"
+        app:layout_constraintTop_toBottomOf="@+id/button3" />
+
+    <Button
+        android:id="@+id/button3"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="16dp"
+        android:layout_marginTop="8dp"
+        android:text="Button"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/button_scan" />
+
+</android.support.constraint.ConstraintLayout>
