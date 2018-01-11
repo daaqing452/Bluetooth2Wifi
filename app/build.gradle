@@ -27,4 +27,5 @@ dependencies {
     androidTestImplementation 'com.android.support.test:runner:1.0.1'
     androidTestImplementation 'com.android.support.test.espresso:espresso-core:3.0.1'
     compile 'com.clj.fastble:FastBleLib:2.2.2'
+    compile 'no.nordicsemi.android.support.v18:scanner:1.0.0'
 }

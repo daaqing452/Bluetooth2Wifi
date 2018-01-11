@@ -25,13 +25,17 @@ server = socketserver.ThreadingTCPServer((ip, PORT), MyServer)
 server.serve_forever()
 '''
 
+# 
 server = socket.socket()
 server.bind((ip, PORT))
 server.listen(5)
 clients = []
 
-def hysend(client, s):
+def send(client, s):
 	client.sendall(bytes(s + '\n', encoding='utf-8'))
+
+def recv(client, address, s):
+	print('[%s:%d]: %s' % (address[0], address[1], s))
 
 def recv_thread(client, address):
 	while True:
@@ -41,7 +45,7 @@ def recv_thread(client, address):
 			print('[disconnected]: %s:%d (%d)' % (address[0], address[1], len(clients)))
 			break
 		s = str(b, encoding='utf-8')
-		print('[%s:%d]: %s' % (address[0], address[1], s))
+		recv(client, address, s)
 
 def listen_thread():
 	global clients
@@ -52,7 +56,7 @@ def listen_thread():
 		print('[ connected  ]: %s:%d (%d)' % (address[0], address[1], len(clients)))
 		t = threading.Thread(target=recv_thread, args=[client, address])
 		t.start()
-		hysend(client, "服务器端发送!")
+		send(client, "服务器端发送!")
 
 t = threading.Thread(target=listen_thread)
 t.setDaemon(True)
@@ -62,4 +66,4 @@ while True:
 	s = input()
 	print('[ broadcast  ] %d clients: "%s"' % (len(clients), s))
 	for client in clients:
-		hysend(client, s)
+		send(client, s)

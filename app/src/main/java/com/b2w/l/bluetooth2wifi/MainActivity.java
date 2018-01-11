@@ -3,6 +3,7 @@ package com.b2w.l.bluetooth2wifi;
 import android.app.Activity;
 import android.os.AsyncTask;
 import android.os.Bundle;
+import android.os.ParcelUuid;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.Toolbar;
 import android.util.Log;
@@ -22,8 +23,15 @@ import java.io.InputStreamReader;
 import java.io.OutputStreamWriter;
 import java.io.PrintWriter;
 import java.net.Socket;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
+
+import no.nordicsemi.android.support.v18.scanner.BluetoothLeScannerCompat;
+import no.nordicsemi.android.support.v18.scanner.ScanCallback;
+import no.nordicsemi.android.support.v18.scanner.ScanFilter;
+import no.nordicsemi.android.support.v18.scanner.ScanResult;
+import no.nordicsemi.android.support.v18.scanner.ScanSettings;
 
 public class MainActivity extends AppCompatActivity {
 
@@ -31,10 +39,17 @@ public class MainActivity extends AppCompatActivity {
     TextView text_0, text_ip, text_connect_info;
     Activity activity_uithread;
 
-    // ble
+    final String BLUETOOTH_LIB = "scanner";
+
+    // fastble
     // https://github.com/Jasonchenlijian/FastBle
     BleManager manager;
-    BleScanRuleConfig scanRuleConfig;
+
+    // scanner
+    // https://github.com/NordicSemiconductor/Android-Scanner-Compat-Library
+    BluetoothLeScannerCompat scanner;
+    ScanSettings settings;
+    List<ScanFilter> filters;
 
     // wifi
     static int PORT = 11121;
@@ -61,32 +76,55 @@ public class MainActivity extends AppCompatActivity {
         button_scan.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                manager.initScanRule(scanRuleConfig);
-                manager.scan(new BleScanCallback() {
-                    @Override
-                    public void onScanStarted(boolean success) {
-                        // 开始扫描（主线程）
-                    }
+                if (BLUETOOTH_LIB == "fastble") {
+                    manager.scan(new BleScanCallback() {
+                        @Override
+                        public void onScanStarted(boolean success) {
+                            // 开始扫描（主线程）
+                        }
 
-                    @Override
-                    public void onScanning(BleDevice bleDevice) {
-                        Log.d("b2wdebug", "scaned device: " + bleDevice.getName() + " " + bleDevice.getRssi());
-                    }
+                        @Override
+                        public void onScanning(BleDevice bleDevice) {
+                            Log.d("b2wdebug", "scaned device: " + bleDevice.getName() + " " + bleDevice.getRssi());
+                        }
 
-                    @Override
-                    public void onScanFinished(List<BleDevice> scanResultList) {
-                        String s = "";
-                        try {
-                            for (final BleDevice bleDevice : scanResultList) {
-                                Log.d("b2wdebug", "rssi:" + bleDevice.getName() + " " + bleDevice.getRssi());
-                                s += bleDevice.getName() + " " + bleDevice.getRssi() + "\n";
+                        @Override
+                        public void onScanFinished(List<BleDevice> scanResultList) {
+                            String s = "";
+                            try {
+                                for (final BleDevice bleDevice : scanResultList) {
+                                    Log.d("b2wdebug", "rssi:" + bleDevice.getName() + " " + bleDevice.getRssi());
+                                    s += bleDevice.getName() + " " + bleDevice.getRssi() + "\n";
+                                }
+                                text_0.setText(s);
+                            } catch (Exception e) {
+                                Log.d("b2wdebug", e.toString());
+                            }
+                        }
+                    });
+                } else if (BLUETOOTH_LIB == "scanner") {
+                    scanner.startScan(filters, settings, new ScanCallback() {
+                        @Override
+                        public void onScanResult(int callbackType, ScanResult result) {
+                            super.onScanResult(callbackType, result);
+                        }
+
+                        @Override
+                        public void onBatchScanResults(List<ScanResult> results) {
+                            String s = "";
+                            for (ScanResult result : results) {
+                                Log.d("b2wdebug", result.getDevice().getName() + " " + result.getRssi());
+                                s += result.getDevice().getName() + " " + result.getRssi() + "\n";
                             }
                             text_0.setText(s);
-                        } catch (Exception e) {
-                            Log.d("b2wdebug", e.toString());
                         }
-                    }
-                });
+
+                        @Override
+                        public void onScanFailed(int errorCode) {
+                            super.onScanFailed(errorCode);
+                        }
+                    });
+                }
             }
         });
 
@@ -120,19 +158,29 @@ public class MainActivity extends AppCompatActivity {
             }
         });
 
-        // ble
-        BleManager.getInstance().init(getApplication());
-        manager = BleManager.getInstance();
-        Log.d("b2wdebug", "is support ble? " + manager.isSupportBle());
-        manager.enableBluetooth();
-        UUID[] uuid = new UUID[] {UUID.fromString("00001819-0000-1000-8000-00805F9B34FB")};
-        scanRuleConfig = new BleScanRuleConfig.Builder()
-                .setServiceUuids(uuid)      // 只扫描指定的服务的设备，可选
-                /*.setDeviceName(true, names)         // 只扫描指定广播名的设备，可选
-                .setDeviceMac(mac)                  // 只扫描指定mac的设备，可选
-                .setAutoConnect(isAutoConnect)      // 连接时的autoConnect参数，可选，默认false*/
-                .setScanTimeOut(1000)              // 扫描超时时间，可选，默认10秒；小于等于0表示不限制扫描时间
-                .build();
+        // bluetooth
+        UUID[] uuid = new UUID[]{UUID.fromString("00001819-0000-1000-8000-00805F9B34FB")};
+        if (BLUETOOTH_LIB == "fastble") {
+            BleManager.getInstance().init(getApplication());
+            manager = BleManager.getInstance();
+            Log.d("b2wdebug", "is support ble? " + manager.isSupportBle());
+            manager.enableBluetooth();
+            BleScanRuleConfig scanRuleConfig = new BleScanRuleConfig.Builder()
+                    .setServiceUuids(uuid)      // 只扫描指定的服务的设备，可选
+                    /*.setDeviceName(true, names)         // 只扫描指定广播名的设备，可选
+                    .setDeviceMac(mac)                  // 只扫描指定mac的设备，可选
+                    .setAutoConnect(isAutoConnect)      // 连接时的autoConnect参数，可选，默认false*/
+                    .setScanTimeOut(1000)              // 扫描超时时间，可选，默认10秒；小于等于0表示不限制扫描时间
+                    .build();
+            manager.initScanRule(scanRuleConfig);
+        } else if (BLUETOOTH_LIB == "scanner") {
+            scanner = BluetoothLeScannerCompat.getScanner();
+            settings = new ScanSettings.Builder()
+                    .setScanMode(ScanSettings.SCAN_MODE_LOW_LATENCY).setReportDelay(100)
+                    .setUseHardwareBatchingIfSupported(false).build();
+            filters = new ArrayList<>();
+            filters.add(new ScanFilter.Builder().setServiceUuid(new ParcelUuid(uuid[0])).build());
+        }
     }
 
     void disconnect() {
