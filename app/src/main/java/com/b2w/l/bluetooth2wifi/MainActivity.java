@@ -11,12 +11,16 @@ import android.view.View;
 import android.widget.Button;
 import android.widget.TextView;
 
+import com.b2w.l.bluetooth2wifi.advertiser;
+import android.bluetooth.BluetoothAdapter;
 import com.clj.fastble.BleManager;
 import com.clj.fastble.callback.BleRssiCallback;
 import com.clj.fastble.callback.BleScanCallback;
 import com.clj.fastble.data.BleDevice;
 import com.clj.fastble.exception.BleException;
 import com.clj.fastble.scan.BleScanRuleConfig;
+import android.bluetooth.BluetoothManager;
+import android.content.Context;
 
 import java.io.BufferedReader;
 import java.io.InputStreamReader;
@@ -158,7 +162,7 @@ public class MainActivity extends AppCompatActivity {
             }
         });
 
-        // bluetooth
+        // bluetooth scan
         UUID[] uuid = new UUID[]{UUID.fromString("00001819-0000-1000-8000-00805F9B34FB")};
         if (BLUETOOTH_LIB == "fastble") {
             BleManager.getInstance().init(getApplication());
@@ -181,6 +185,14 @@ public class MainActivity extends AppCompatActivity {
             filters = new ArrayList<>();
             filters.add(new ScanFilter.Builder().setServiceUuid(new ParcelUuid(uuid[0])).build());
         }
+
+        // bluetooth advertisement
+        BluetoothManager manager = (BluetoothManager) getSystemService(Context.BLUETOOTH_SERVICE);
+        BluetoothAdapter btAdapter = manager.getAdapter();
+        // Advertising start
+        new advertiser(getApplicationContext(), btAdapter);
+
+
     }
 
     void disconnect() {
