@@ -62,6 +62,8 @@ public class MainActivity extends AppCompatActivity {
     PrintWriter writer;
     boolean listening;
     String tmp_s;
+    byte[] manudata;
+
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -119,6 +121,14 @@ public class MainActivity extends AppCompatActivity {
                             for (ScanResult result : results) {
                                 Log.d("b2wdebug", result.getDevice().getName() + " " + result.getRssi());
                                 s += result.getDevice().getName() + " " + result.getRssi() + "\n";
+//                                parse the report data
+                                if (result.getScanRecord().getManufacturerSpecificData(0xffff) != null){
+                                    manudata = result.getScanRecord().getManufacturerSpecificData(0xffff);
+                                    Log.d("b2wdebug", result.getDevice().getName() + " "+ manudata[0]+ manudata[1]+ manudata[2]+ manudata[3]+ manudata[4]);
+                                    send(manudata.toString());
+                                }
+
+
                             }
                             text_0.setText(s);
                         }
@@ -194,6 +204,12 @@ public class MainActivity extends AppCompatActivity {
 
 
     }
+
+//    void parse_manudata(byte[] manudata){
+//        for (int i=0; i<manudata.length;i++){
+//
+//        }
+//    }
 
     void disconnect() {
         try {

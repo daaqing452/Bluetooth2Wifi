@@ -23,21 +23,29 @@ public class advertiser {
         BluetoothLeAdvertiser btAdvertiser = btAdapter.getBluetoothLeAdvertiser();
 
         ParcelUuid puuid = new ParcelUuid(UUID.fromString("00001819-0000-1000-8000-00805F9B34FB"));
-
+        //ParcelUuid puuid = new ParcelUuid(UUID.fromString("1819"));
         //ParcelUuid puuid = new ParcelUuid(UUID.fromString(context.getString(R.string.btmesh_uuid)));
-
-        btAdapter.setName("BTLE");
-
+        byte beacon_index = 3;
+        btAdapter.setName("B3");
+        byte[] rssi_data = {beacon_index,(byte)0xff,(byte)0xff,(byte)0xff,(byte)0xff,(byte)0xff,(byte)0xff,(byte)0xff,(byte)0xff};
         AdvertiseSettings settings = new AdvertiseSettings.Builder()
                 .setAdvertiseMode(AdvertiseSettings.ADVERTISE_MODE_LOW_LATENCY)
-                .setConnectable(true)
+                .setConnectable(false)
                 .setTimeout(0)
-                .setTxPowerLevel(AdvertiseSettings.ADVERTISE_TX_POWER_HIGH)
+                .setTxPowerLevel(AdvertiseSettings.ADVERTISE_TX_POWER_MEDIUM)
                 .build();
         AdvertiseData data = new AdvertiseData.Builder()
                 .setIncludeDeviceName(true)
                 .addServiceUuid(puuid)
+                .setIncludeTxPowerLevel(false)
+                .addManufacturerData(0xff,rssi_data)
                 .build();
+
+        Log.d("b2wdebug", "service uuid is " + data.getServiceUuids());
+        Log.d("b2wdebug", "manu data is " + data.getManufacturerSpecificData().toString());
+        Log.d("b2wdebug", "service data is " + data.getServiceData().toString());
+        Log.d("b2wdebug", "all data is " + data.toString());
+
         btAdvertiser.startAdvertising(
                 settings,
                 data,
