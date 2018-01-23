@@ -37,6 +37,7 @@ import no.nordicsemi.android.support.v18.scanner.ScanFilter;
 import no.nordicsemi.android.support.v18.scanner.ScanResult;
 import no.nordicsemi.android.support.v18.scanner.ScanSettings;
 
+
 public class MainActivity extends AppCompatActivity {
 
     // ui
@@ -120,12 +121,14 @@ public class MainActivity extends AppCompatActivity {
                             String s = "";
                             for (ScanResult result : results) {
                                 Log.d("b2wdebug", result.getDevice().getName() + " " + result.getRssi());
-                                s += result.getDevice().getName() + " " + result.getRssi() + "\n";
+//                                s += result.getDevice().getName() + " " + result.getRssi() + "\n";
 //                                parse the report data
                                 if (result.getScanRecord().getManufacturerSpecificData(0xffff) != null){
                                     manudata = result.getScanRecord().getManufacturerSpecificData(0xffff);
                                     Log.d("b2wdebug", result.getDevice().getName() + " "+ manudata[0]+ manudata[1]+ manudata[2]+ manudata[3]+ manudata[4]);
-                                    send(manudata.toString());
+                                    String manustr = bytesToHex(manudata);
+                                    s += manustr + "\n";
+                                    send(manustr);
                                 }
 
 
@@ -190,7 +193,7 @@ public class MainActivity extends AppCompatActivity {
         } else if (BLUETOOTH_LIB == "scanner") {
             scanner = BluetoothLeScannerCompat.getScanner();
             settings = new ScanSettings.Builder()
-                    .setScanMode(ScanSettings.SCAN_MODE_LOW_LATENCY).setReportDelay(100)
+                    .setScanMode(ScanSettings.SCAN_MODE_LOW_LATENCY).setReportDelay(50)
                     .setUseHardwareBatchingIfSupported(false).build();
             filters = new ArrayList<>();
             filters.add(new ScanFilter.Builder().setServiceUuid(new ParcelUuid(uuid[0])).build());
@@ -246,6 +249,15 @@ public class MainActivity extends AppCompatActivity {
             }
         });
     }
+
+    public static String bytesToHex(byte[] in) {
+        final StringBuilder builder = new StringBuilder();
+        for(byte b : in) {
+            builder.append(String.format("%02x", b));
+        }
+        return builder.toString();
+    }
+
 
     class NetworkAsyncTask extends AsyncTask<String, Integer, String> {
 
