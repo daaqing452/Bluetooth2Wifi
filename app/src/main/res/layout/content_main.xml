@@ -42,7 +42,7 @@
         android:layout_height="45dp"
         android:layout_marginStart="12dp"
         android:layout_marginTop="16dp"
-        android:text="192.168.1.240"
+        android:text="101.6.114.22"
         android:textColor="@android:color/black"
         app:layout_constraintStart_toEndOf="@+id/button_connect"
         app:layout_constraintTop_toTopOf="parent" />

@@ -10,6 +10,7 @@ import android.util.Log;
 import android.view.View;
 import android.widget.Button;
 import android.widget.TextView;
+import java.util.concurrent.TimeUnit;
 
 import com.b2w.l.bluetooth2wifi.advertiser;
 import android.bluetooth.BluetoothAdapter;
@@ -120,6 +121,7 @@ public class MainActivity extends AppCompatActivity {
                         public void onBatchScanResults(List<ScanResult> results) {
                             String s = "";
                             for (ScanResult result : results) {
+
                                 Log.d("b2wdebug", result.getDevice().getName() + " " + result.getRssi());
 //                                s += result.getDevice().getName() + " " + result.getRssi() + "\n";
 //                                parse the report data
@@ -127,8 +129,9 @@ public class MainActivity extends AppCompatActivity {
                                     manudata = result.getScanRecord().getManufacturerSpecificData(0xffff);
                                     Log.d("b2wdebug", result.getDevice().getName() + " "+ manudata[0]+ manudata[1]+ manudata[2]+ manudata[3]+ manudata[4]);
                                     String manustr = bytesToHex(manudata);
-                                    s += manustr + "\n";
-                                    send(manustr);
+                                    long timestampMills = TimeUnit.NANOSECONDS.toMillis(result.getTimestampNanos());
+                                    s += timestampMills+ ":"+ manustr + "\n";
+                                    send(s);
                                 }
 
 
@@ -193,7 +196,7 @@ public class MainActivity extends AppCompatActivity {
         } else if (BLUETOOTH_LIB == "scanner") {
             scanner = BluetoothLeScannerCompat.getScanner();
             settings = new ScanSettings.Builder()
-                    .setScanMode(ScanSettings.SCAN_MODE_LOW_LATENCY).setReportDelay(50)
+                    .setScanMode(ScanSettings.SCAN_MODE_LOW_LATENCY).setReportDelay(10)
                     .setUseHardwareBatchingIfSupported(false).build();
             filters = new ArrayList<>();
             filters.add(new ScanFilter.Builder().setServiceUuid(new ParcelUuid(uuid[0])).build());
@@ -267,7 +270,7 @@ public class MainActivity extends AppCompatActivity {
                 reader = new BufferedReader(new InputStreamReader(socket.getInputStream()));
                 writer = new PrintWriter(new OutputStreamWriter(socket.getOutputStream()));
                 Thread.sleep(300);
-                writer.print("客户端发送!");
+                writer.print("Client Send!");
                 writer.flush();
                 listening = true;
                 new Thread(new Runnable() {
